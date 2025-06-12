@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\TableController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\OrderController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -50,6 +51,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
     Route::patch('products/{product}/toggle', [ProductController::class, 'toggleStatus'])->name('products.toggle');
+
+    // Sipariş Yönetimi Rotaları
+    Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
+    Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
+    Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update');
+    Route::patch('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    // Sipariş ürün işlemleri (isteğe bağlı, API tarzı)
+    Route::post('orders/{order}/items', [OrderController::class, 'addItem'])->name('orders.items.add');
+    Route::put('order-items/{orderItem}', [OrderController::class, 'updateItem'])->name('orders.items.update');
+    Route::delete('order-items/{orderItem}', [OrderController::class, 'removeItem'])->name('orders.items.remove');
 });
 
 require __DIR__ . '/settings.php';

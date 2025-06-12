@@ -28,7 +28,13 @@ const mainNavItems: NavItem[] = [
         title: 'Ürünler',
         href: '/products',
         icon: LayoutGrid,
-    }
+    },
+    {
+        title: 'Siparişler',
+        href: '/orders',
+        icon: LayoutGrid,
+    },
+  
 ];
 
 const footerNavItems: NavItem[] = [

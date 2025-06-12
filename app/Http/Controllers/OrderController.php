@@ -48,6 +48,9 @@ class OrderController extends Controller
         $validated = $request->validate([
             'table_id' => 'required|exists:tables,id',
             'note' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         // Önce bu masada aktif bir sipariş var mı kontrol et
@@ -55,10 +58,7 @@ class OrderController extends Controller
         $existingOrder = $table->activeOrder;
 
         if ($existingOrder) {
-            return response()->json([
-                'message' => 'Bu masada zaten aktif bir sipariş bulunuyor',
-                'order' => $existingOrder
-            ], 400);
+            return redirect()->back()->withErrors(['table_id' => 'Bu masada zaten aktif bir sipariş bulunuyor']);
         }
 
         // Yeni sipariş oluştur
@@ -70,10 +70,24 @@ class OrderController extends Controller
             'total' => 0.00,
         ]);
 
-        return response()->json([
-            'message' => 'Sipariş başarıyla oluşturuldu',
-            'order' => $order
-        ]);
+        $total = 0;
+        foreach ($request->items as $item) {
+            $product = Product::findOrFail($item['product_id']);
+            $lineTotal = $product->price * $item['quantity'];
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $product->id,
+                'quantity' => $item['quantity'],
+                'price' => $product->price,
+                'status' => 'hazırlanıyor',
+            ]);
+            $total += $lineTotal;
+        }
+        $order->total = $total;
+        $order->save();
+
+        // Inertia ile siparişler listesine yönlendir
+        return redirect()->route('orders.index')->with('success', 'Sipariş başarıyla oluşturuldu');
     }
 
     /**
@@ -205,19 +219,69 @@ class OrderController extends Controller
         $validated = $request->validate([
             'note' => 'nullable|string',
             'status' => 'required|in:hazırlanıyor,hazır,teslim,kapandı,ödendi,iptal',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
         ]);
+
+        // Aynı product_id'ye sahip item'ların quantity'sini birleştir
+        $mergedItems = collect($request->items)
+            ->groupBy('product_id')
+            ->map(function ($group) {
+                return [
+                    'product_id' => $group[0]['product_id'],
+                    'quantity' => $group->sum('quantity'),
+                ];
+            })->values()->all();
 
         // Sipariş durumu kapandı ise kapatma zamanını kaydet
         if ($request->status === 'kapandı' && $order->status !== 'kapandı') {
             $validated['closed_at'] = now();
         }
 
-        $order->update($validated);
-
-        return response()->json([
-            'message' => 'Sipariş güncellendi',
-            'order' => $order
+        $order->update([
+            'note' => $request->note,
+            'status' => $request->status,
+            'closed_at' => $validated['closed_at'] ?? $order->closed_at,
         ]);
+
+        // Sipariş ürünlerini güncelle
+        $existingItems = $order->items()->get()->keyBy('product_id');
+        $newProductIds = collect($mergedItems)->pluck('product_id')->all();
+
+        // Silinen ürünleri kaldır
+        foreach ($existingItems as $productId => $orderItem) {
+            if (!in_array($productId, $newProductIds)) {
+                $orderItem->delete();
+            }
+        }
+
+        $total = 0;
+        foreach ($mergedItems as $item) {
+            $product = Product::findOrFail($item['product_id']);
+            $lineTotal = $product->price * $item['quantity'];
+            if (isset($existingItems[$item['product_id']])) {
+                // Varsa güncelle
+                $existingItems[$item['product_id']]->update([
+                    'quantity' => $item['quantity'],
+                    'price' => $product->price,
+                ]);
+            } else {
+                // Yoksa ekle
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $product->id,
+                    'quantity' => $item['quantity'],
+                    'price' => $product->price,
+                    'status' => 'hazırlanıyor',
+                ]);
+            }
+            $total += $lineTotal;
+        }
+        $order->total = $total;
+        $order->save();
+
+        return redirect()->route('orders.show', $order->id)->with('success', 'Sipariş güncellendi');
     }
 
     /**
@@ -240,6 +304,35 @@ class OrderController extends Controller
         return response()->json([
             'message' => 'Sipariş iptal edildi',
             'order' => $order
+        ]);
+    }
+
+    /**
+     * Sipariş oluşturma formunu göster
+     */
+    public function create()
+    {
+        $tables = Table::all();
+        // Ürünleri kategorilere göre gruplayarak al
+        $categories = \App\Models\Category::with(['products'])->get();
+        return Inertia::render('Orders/Create', [
+            'tables' => $tables,
+            'categories' => $categories
+        ]);
+    }
+
+    /**
+     * Sipariş düzenleme formunu göster
+     */
+    public function edit(Order $order)
+    {
+        $tables = Table::all();
+        $categories = \App\Models\Category::with(['products'])->get();
+        $order->load(['items']);
+        return Inertia::render('Orders/Edit', [
+            'order' => $order,
+            'tables' => $tables,
+            'categories' => $categories
         ]);
     }
 }
