@@ -10,17 +10,17 @@ import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: 'Ana Sayfa',
         href: '/dashboard',
         icon: LayoutGrid,
     },
     {
-        title: 'Tables',
+        title: 'Masa Yönetimi',
         href: '/tables',
         icon: LayoutGrid,
     },
     {
-        title: 'Categories',
+        title: 'Kategoriler',
         href: '/categories',
         icon: LayoutGrid,
     },
@@ -34,20 +34,15 @@ const mainNavItems: NavItem[] = [
         href: '/orders',
         icon: LayoutGrid,
     },
-  
+    {
+        title: 'Ödeme Al',
+        href: '/payments/create',
+        icon: LayoutGrid,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
-    {
-        title: 'Github Repo',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
+    
 ];
 </script>
 

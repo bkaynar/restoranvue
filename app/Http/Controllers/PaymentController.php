@@ -53,17 +53,13 @@ class PaymentController extends Controller
 
         // Sipariş durumunu kontrol et
         if (in_array($order->status, ['iptal'])) {
-            return response()->json([
-                'message' => 'İptal edilmiş siparişe ödeme eklenemez'
-            ], 400);
+            return redirect()->back()->withErrors(['order_id' => 'İptal edilmiş siparişe ödeme eklenemez']);
         }
 
         // Ödeme miktarını kontrol et
         $remainingAmount = $order->remainingAmount();
         if ($request->amount > $remainingAmount) {
-            return response()->json([
-                'message' => 'Ödeme miktarı kalan miktardan fazla olamaz'
-            ], 400);
+            return redirect()->back()->withErrors(['amount' => 'Ödeme miktarı kalan miktardan fazla olamaz']);
         }
 
         // Ödeme oluştur
@@ -88,10 +84,7 @@ class PaymentController extends Controller
             ]);
         }
 
-        return response()->json([
-            'message' => 'Ödeme başarıyla eklendi',
-            'payment' => $payment
-        ]);
+        return redirect()->back()->with('success', 'Ödeme başarıyla alındı');
     }
 
     /**
@@ -170,6 +163,20 @@ class PaymentController extends Controller
         return response()->json([
             'message' => 'Ödeme iptal edildi',
             'payment' => $payment
+        ]);
+    }
+
+    /**
+     * Hızlı ödeme ekranı için tüm masaları ve aktif siparişleri getir
+     */
+    public function quickPayment()
+    {
+        // Tüm masaları ve aktif siparişlerini getir
+        $tables = \App\Models\Table::with(['activeOrder' => function ($q) {
+            $q->whereNotIn('status', ['kapandı', 'ödendi', 'iptal']);
+        }])->get();
+        return Inertia::render('Payments/Create', [
+            'tables' => $tables
         ]);
     }
 }

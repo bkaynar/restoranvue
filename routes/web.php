@@ -7,18 +7,33 @@ use App\Http\Controllers\TableController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
 Route::get('dashboard', function () {
-    $user = Auth::user()->load('roles'); // rolleri eager load ettik
+    $user = Auth::user()->load('roles');
+
+    // Gerçek veriler
+    $totalTables = \App\Models\Table::count();
+    $occupiedTables = \App\Models\Table::whereHas('activeOrder')->count();
+    $activeOrders = \App\Models\Order::whereNotIn('status', ['kapandı', 'ödendi', 'iptal'])->count();
+    $dailyRevenue = \App\Models\Payment::whereDate('created_at', today())->where('status', 'ödendi')->sum('amount');
+    $lastOrders = \App\Models\Order::with('table')->orderBy('created_at', 'desc')->take(5)->get();
 
     return Inertia::render('Dashboard', [
         'auth' => [
             'user' => $user,
         ],
+        'stats' => [
+            'totalTables' => $totalTables,
+            'occupiedTables' => $occupiedTables,
+            'activeOrders' => $activeOrders,
+            'dailyRevenue' => $dailyRevenue,
+        ],
+        'lastOrders' => $lastOrders,
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -64,6 +79,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('orders/{order}/items', [OrderController::class, 'addItem'])->name('orders.items.add');
     Route::put('order-items/{orderItem}', [OrderController::class, 'updateItem'])->name('orders.items.update');
     Route::delete('order-items/{orderItem}', [OrderController::class, 'removeItem'])->name('orders.items.remove');
+
+    // Ödeme Yönetimi Rotaları
+    Route::get('payments/create', [PaymentController::class, 'quickPayment'])->name('payments.create');
+    Route::post('payments', [PaymentController::class, 'store'])->name('payments.store');
 });
 
 require __DIR__ . '/settings.php';
