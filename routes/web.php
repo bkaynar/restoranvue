@@ -8,6 +8,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\UsersController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -83,6 +84,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Ödeme Yönetimi Rotaları
     Route::get('payments/create', [PaymentController::class, 'quickPayment'])->name('payments.create');
     Route::post('payments', [PaymentController::class, 'store'])->name('payments.store');
+
+    // Kullanıcı Yönetimi Rotaları
+    Route::get('/users', [UsersController::class, 'index'])->name('users.index');
+    Route::post('/users', [UsersController::class, 'store'])->name('users.store');
+    Route::delete('/users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
 });
 
 require __DIR__ . '/settings.php';

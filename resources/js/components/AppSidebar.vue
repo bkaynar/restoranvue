@@ -39,10 +39,15 @@ const mainNavItems: NavItem[] = [
         href: '/payments/create',
         icon: LayoutGrid,
     },
+    {
+        title: 'Kullanıcılar',
+        href: '/users',
+        icon: LayoutGrid,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
-    
+
 ];
 </script>
 

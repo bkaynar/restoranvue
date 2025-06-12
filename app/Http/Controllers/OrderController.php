@@ -313,8 +313,14 @@ class OrderController extends Controller
     public function create()
     {
         $tables = Table::all();
-        // Ürünleri kategorilere göre gruplayarak al
-        $categories = \App\Models\Category::with(['products'])->get();
+        // Sadece aktif ürünleri kategorilere göre gruplayarak al
+        $categories = \App\Models\Category::with(['activeProducts'])->where('is_active', true)->get();
+        // Kategoriye products yerine activeProducts olarak gönder
+        $categories = $categories->map(function ($cat) {
+            $cat->products = $cat->activeProducts;
+            unset($cat->activeProducts);
+            return $cat;
+        });
         return Inertia::render('Orders/Create', [
             'tables' => $tables,
             'categories' => $categories
