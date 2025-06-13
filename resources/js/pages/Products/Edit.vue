@@ -47,6 +47,7 @@ const removeImage = () => {
 const updateProduct = () => {
     loading.value = true;
     const data = new FormData();
+    data.append('_method', 'PUT'); // Laravel için method spoofing
     data.append('name', form.value.name);
     data.append('description', form.value.description);
     data.append('price', String(form.value.price));
@@ -58,7 +59,7 @@ const updateProduct = () => {
     }
     router.post(route('products.update', props.product.id), data, {
         forceFormData: true,
-        method: 'post',
+        method: 'post', // method 'post' olmalı, çünkü _method ile spoofing yapıyoruz
         onFinish: () => {
             loading.value = false;
         },
