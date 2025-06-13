@@ -6,7 +6,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 interface Table { id: number; name: string }
 interface Product { id: number; name: string; price: number; stock: number }
 interface Category { id: number; name: string; products: Product[] }
-interface User { id: number; name: string }
+interface User { id: number; name: string; roles?: { name: string }[] }
 
 const props = defineProps<{
     order: {
@@ -23,7 +23,8 @@ const props = defineProps<{
 
 const page = usePage();
 const currentUserId = computed(() => page.props.auth?.user?.id);
-const isOwner = computed(() => currentUserId.value === props.order.user_id);
+const isAdmin = computed(() => page.props.auth?.user?.roles?.some((r: any) => r.name === 'yönetici'));
+const isOwnerOrAdmin = computed(() => currentUserId.value === props.order.user_id || isAdmin.value);
 
 const form = ref({
     table_id: props.order.table_id,
@@ -78,7 +79,7 @@ function submitOrder() {
                 <Link :href="route('orders.show', props.order.id)" class="text-blue-600 hover:underline">← Geri</Link>
             </div>
             <div class="bg-white dark:bg-gray-900 shadow-md sm:rounded-lg p-6">
-                <form v-if="isOwner" @submit.prevent="submitOrder" class="flex flex-col gap-6">
+                <form v-if="isOwnerOrAdmin" @submit.prevent="submitOrder" class="flex flex-col gap-6">
                     <div>
                         <label class="block mb-1 font-medium">Masa</label>
                         <select v-model="form.table_id" required class="px-4 py-2 border rounded w-full">
@@ -153,7 +154,7 @@ function submitOrder() {
                     </div>
                 </form>
                 <div v-else class="text-red-600 font-semibold text-center py-8">
-                    Bu siparişi sadece oluşturan kişi düzenleyebilir.
+                    Bu siparişi sadece oluşturan kişi veya yönetici düzenleyebilir.
                 </div>
             </div>
         </div>
