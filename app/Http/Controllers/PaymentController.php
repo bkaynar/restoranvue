@@ -223,4 +223,25 @@ class PaymentController extends Controller
             ],
         ]);
     }
+
+    public function hourlySales()
+    {
+        $labels = [];
+        $data = [];
+        for ($i = 0; $i <= 24; $i++) {
+            $hour = str_pad($i, 2, '0', STR_PAD_LEFT);
+            $labels[] = $hour . ':00';
+            $start = now()->startOfDay()->addHours($i);
+            $end = (clone $start)->addHour();
+            $total = \App\Models\Payment::where('status', 'ödendi')
+                ->whereDate('created_at', today())
+                ->whereBetween('created_at', [$start, $end])
+                ->sum('amount');
+            $data[] = (float) $total;
+        }
+        return response()->json([
+            'labels' => $labels,
+            'data' => $data,
+        ]);
+    }
 }

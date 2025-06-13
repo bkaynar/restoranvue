@@ -78,11 +78,23 @@ onMounted(async () => {
                 {
                     label: 'Tutar(₺)',
                     data: result.data,
-                    borderColor: '#1976d2',
-                    backgroundColor: 'rgba(25, 118, 210, 0.1)',
-                    pointBackgroundColor: '#ffa726',
-                    pointBorderColor: '#fff',
-                    pointRadius: 5,
+                    borderColor: '#3b82f6',
+                    backgroundColor: (ctx: any) => {
+                        const canvas = ctx.chart.ctx;
+                        const gradient = canvas.createLinearGradient(0, 0, 0, 400);
+                        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+                        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
+                        return gradient;
+                    },
+                    pointBackgroundColor: '#3b82f6',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 3,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointHoverBackgroundColor: '#1d4ed8',
+                    pointHoverBorderColor: '#ffffff',
+                    pointHoverBorderWidth: 3,
+                    borderWidth: 3,
                     tension: 0.4,
                     fill: true,
                 },
@@ -95,34 +107,93 @@ onMounted(async () => {
 
 const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
-        legend: { display: false },
+        legend: {
+            display: false
+        },
         title: {
             display: true,
             text: 'Günlük Satış Miktarları',
-            align: 'start' as const, // Chart.js sadece 'start' | 'center' | 'end' kabul eder
-            font: { size: 18 },
+            align: 'start' as const,
+            font: {
+                size: 20,
+                weight: 'bold' as const,
+                family: 'Inter, sans-serif'
+            },
+            color: '#1f2937',
+            padding: {
+                bottom: 20
+            }
         },
         tooltip: {
+            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
+            cornerRadius: 12,
+            padding: 12,
+            displayColors: false,
             callbacks: {
-                label: (ctx: any) => `Tutar: ₺${ctx.parsed.y}`,
+                title: (ctx: any) => `Saat: ${ctx[0].label}`,
+                label: (ctx: any) => `Satış: ${ctx.parsed.y.toLocaleString('tr-TR')} ₺`,
             },
         },
     },
     scales: {
         y: {
             beginAtZero: true,
+            grid: {
+                color: 'rgba(156, 163, 175, 0.2)',
+                drawBorder: false,
+            },
+            ticks: {
+                color: '#6b7280',
+                font: {
+                    size: 12,
+                    family: 'Inter, sans-serif'
+                },
+                callback: function (value: any) {
+                    return value + ' ₺';
+                }
+            },
             title: {
                 display: true,
-                text: 'Tutar(₺)'
+                text: 'Tutar (₺)',
+                color: '#4b5563',
+                font: {
+                    size: 14,
+                    weight: 'bold' as const,
+                    family: 'Inter, sans-serif'
+                }
             }
         },
         x: {
+            grid: {
+                display: false,
+                drawBorder: false,
+            },
+            ticks: {
+                color: '#6b7280',
+                font: {
+                    size: 11,
+                    family: 'Inter, sans-serif'
+                },
+                maxTicksLimit: 12
+            },
             title: {
                 display: false,
             }
         }
     },
+    interaction: {
+        intersect: false,
+        mode: 'index' as const,
+    },
+    elements: {
+        point: {
+            hoverRadius: 8,
+        }
+    }
 };
 </script>
 
@@ -134,10 +205,23 @@ const chartOptions = {
         <div class="max-w-6xl mx-12 py-8">
             <div v-if="userHasRole('yönetici')">
                 <div
-                    class="rounded-xl bg-white dark:bg-gray-900 p-12 mb-2 h-120 border border-gray-200 dark:border-gray-100">
-                    <div v-if="!chartData" class="flex items-center justify-center h-32 text-gray-400">Yükleniyor...
+                    class="rounded-xl bg-white dark:bg-gray-900 p-8 mb-8 shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div v-if="!chartData" class="flex items-center justify-center h-80 text-gray-400">
+                        <div class="text-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-blue-500 mx-auto mb-4"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            <p class="text-gray-500 dark:text-gray-400">Yükleniyor...</p>
+                        </div>
                     </div>
-                    <Line v-else :data="chartData" :options="chartOptions" class="mx-auto w-400" />
+                    <div v-else class="h-80">
+                        <Line :data="chartData" :options="chartOptions" />
+                    </div>
                 </div>
                 <!-- İstatistik Kutuları -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -242,11 +326,11 @@ const chartOptions = {
                                         'MasaYok' }}</span>
                                     <span class="ml-2 text-xs text-gray-400">{{ new
                                         Date(order.created_at).toLocaleString('tr-TR')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="font-bold text-green-600 dark:text-green-400">₺{{
                                     Number(order.total).toFixed(2)
-                                }}</div>
+                                    }}</div>
                             </li>
                         </ul>
                     </div>

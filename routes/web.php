@@ -84,6 +84,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Ödeme Yönetimi Rotaları
     Route::get('payments/create', [PaymentController::class, 'quickPayment'])->name('payments.create');
     Route::post('payments', [PaymentController::class, 'store'])->name('payments.store');
+    Route::get('payments/hourly-sales', [PaymentController::class, 'hourlySales'])->name('payments.hourly-sales');
 
     // Kullanıcı Yönetimi Rotaları
     Route::get('/users', [UsersController::class, 'index'])->name('users.index');
