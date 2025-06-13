@@ -91,15 +91,12 @@ class PaymentController extends Controller
             'paid_at' => now(),
         ]);
 
-        // Eğer tüm ödeme yapıldıysa, siparişin durumunu güncelle
+        // Siparişin kalan tutarını tekrar hesapla
+        $order->refresh();
         if ($order->remainingAmount() <= 0) {
             $order->update([
                 'status' => 'ödendi',
                 'closed_at' => now()
-            ]);
-        } else {
-            $order->update([
-                'status' => 'kapandı'
             ]);
         }
 
@@ -201,8 +198,9 @@ class PaymentController extends Controller
     {
         // Tüm masaları ve aktif siparişlerini getir
         $tables = \App\Models\Table::with(['activeOrder' => function ($q) {
-            $q->whereNotIn('status', ['kapandı', 'ödendi', 'iptal']);
-        }, 'activeOrder.items.product'])->get();
+            $q->whereNotIn('status', ['kapandı', 'ödendi', 'iptal'])
+                ->with(['items.product', 'payments']);
+        }])->get();
         $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
         $userArr = $user ? $user->toArray() : null;
         if ($user && method_exists($user, 'getRoleNames')) {
@@ -210,6 +208,14 @@ class PaymentController extends Controller
                 return ['name' => $role->name];
             });
         }
+        // Her masanın aktif siparişi için ödenen ve kalan tutarı ekle
+        $tables = $tables->map(function ($table) {
+            if ($table->activeOrder) {
+                $table->activeOrder->paid_amount = $table->activeOrder->totalPaid();
+                $table->activeOrder->remaining_amount = $table->activeOrder->remainingAmount();
+            }
+            return $table;
+        });
         return Inertia::render('Payments/QuickPayment', [
             'tables' => $tables,
             'auth' => [

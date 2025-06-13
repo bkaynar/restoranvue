@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 
@@ -13,6 +13,8 @@ const selectedOrder = ref<{ id: number; total: number; status: string } | null>(
 const showConfirm = ref(false);
 const partialAmount = ref('');
 const amountError = ref('');
+const paidAmount = ref(0);
+const remainingAmount = ref(0);
 
 const paymentTypes = [
     { value: 'nakit', label: 'Nakit' },
@@ -23,6 +25,9 @@ const paymentTypes = [
 
 function openPayment(order: any) {
     selectedOrder.value = order;
+    paidAmount.value = order.paid_amount || 0;
+    remainingAmount.value = order.remaining_amount || (order.total - paidAmount.value);
+    partialAmount.value = '';
 }
 
 function closePayment() {
@@ -31,13 +36,13 @@ function closePayment() {
 
 function submitPayment() {
     if (!selectedOrder.value) return;
-    const amount = partialAmount.value ? Number(partialAmount.value) : selectedOrder.value.total;
+    const amount = partialAmount.value ? Number(partialAmount.value) : remainingAmount.value;
     if (isNaN(amount) || amount <= 0) {
         amountError.value = 'Geçerli bir tutar girin.';
         return;
     }
-    if (amount > selectedOrder.value.total) {
-        amountError.value = 'Girilen tutar sipariş toplamını aşamaz.';
+    if (amount > remainingAmount.value) {
+        amountError.value = 'Girilen tutar kalan bakiyeyi aşamaz.';
         return;
     }
     amountError.value = '';
@@ -49,8 +54,12 @@ function submitPayment() {
     }, {
         onFinish: () => loading.value = false,
         onSuccess: () => {
-            closePayment();
-            router.reload();
+            paidAmount.value += amount;
+            remainingAmount.value -= amount;
+            partialAmount.value = '';
+            if (remainingAmount.value <= 0) {
+                closePayment();
+            }
         },
     });
 }
@@ -65,11 +74,18 @@ function handleConfirm(result: boolean) {
         submitPayment();
     }
 }
+
+// Kalan tutar sıfırsa popup otomatik kapanacak şekilde izleyici ekle
+watch(remainingAmount, (val) => {
+    if (val === 0 && showConfirm.value) {
+        closePayment();
+    }
+});
 </script>
 
 <template>
     <AppLayout>
-        <div class="max-w-4xl mx-auto py-10">
+        <div class="max-w-4xl mx-12 py-10">
             <h1 class="text-2xl font-bold mb-6 text-center">Aktif Masalar</h1>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <div v-for="table in tables.filter(t => t.active_order)" :key="table.id"
@@ -120,6 +136,14 @@ function handleConfirm(result: boolean) {
                             class="w-full border rounded px-3 py-2"
                             placeholder="Tutar girin (boş bırakılırsa tam tutar)" />
                         <div v-if="amountError" class="text-red-500 text-xs mt-1">{{ amountError }}</div>
+                    </div>
+                    <div class="mb-4 flex justify-between">
+                        <span class="font-medium">Şu ana kadar ödenen:</span>
+                        <span class="font-bold text-green-600">₺{{ Number(paidAmount).toFixed(2) }}</span>
+                    </div>
+                    <div class="mb-4 flex justify-between">
+                        <span class="font-medium">Kalan Tutar:</span>
+                        <span class="font-bold text-red-600">₺{{ Number(remainingAmount).toFixed(2) }}</span>
                     </div>
                     <button :disabled="loading" @click="confirmAndSubmitPayment"
                         class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50">

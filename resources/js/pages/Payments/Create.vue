@@ -108,7 +108,7 @@ function handleConfirm(result: boolean) {
                         <span class="capitalize">{{ selectedOrder.status }}</span>
                     </div>
                     <div class="mb-4">
-                        <label class="block mb-1 font-medium">Ödeme Türü</label>
+                        <label class="block mb-1 font-medium">Ödemase Türü</label>
                         <select v-model="paymentType" class="w-full border rounded px-3 py-2">
                             <option v-for="type in paymentTypes" :key="type.value" :value="type.value">{{ type.label }}
                             </option>
