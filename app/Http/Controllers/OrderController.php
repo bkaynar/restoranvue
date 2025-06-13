@@ -20,9 +20,12 @@ class OrderController extends Controller
         $orders = Order::with(['table', 'user'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
-
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
         return Inertia::render('Orders/Index', [
-            'orders' => $orders
+            'orders' => $orders,
+            'auth' => [
+                'user' => $user,
+            ],
         ]);
     }
 

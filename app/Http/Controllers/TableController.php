@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Table;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class TableController extends Controller
 {
@@ -17,8 +18,16 @@ class TableController extends Controller
             $query->whereNotIn('status', ['kapandı', 'ödendi', 'iptal']);
         }])->get();
 
+        $user = Auth::user();
+        if ($user) {
+            $user->load('roles');
+        }
+
         return Inertia::render('Tables/Index', [
-            'tables' => $tables
+            'tables' => $tables,
+            'auth' => [
+                'user' => $user,
+            ],
         ]);
     }
 
@@ -41,7 +50,15 @@ class TableController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Tables/Create');
+        $user = Auth::user();
+        if ($user) {
+            $user->load('roles');
+        }
+        return Inertia::render('Tables/Create', [
+            'auth' => [
+                'user' => $user,
+            ],
+        ]);
     }
 
     /**
@@ -66,9 +83,15 @@ class TableController extends Controller
     public function show(Table $table)
     {
         $table->load(['activeOrder.items.product', 'activeOrder.payments']);
-
+        $user = Auth::user();
+        if ($user) {
+            $user->load('roles');
+        }
         return Inertia::render('Tables/Show', [
-            'table' => $table
+            'table' => $table,
+            'auth' => [
+                'user' => $user,
+            ],
         ]);
     }
 
@@ -89,8 +112,15 @@ class TableController extends Controller
      */
     public function edit(Table $table)
     {
+        $user = Auth::user();
+        if ($user) {
+            $user->load('roles');
+        }
         return Inertia::render('Tables/Edit', [
-            'table' => $table
+            'table' => $table,
+            'auth' => [
+                'user' => $user,
+            ],
         ]);
     }
 

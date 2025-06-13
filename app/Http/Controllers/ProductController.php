@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -16,9 +17,18 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::with('category')->get();
-
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
+        $userArr = $user ? $user->toArray() : null;
+        if ($user && method_exists($user, 'getRoleNames')) {
+            $userArr['roles'] = $user->roles->map(function ($role) {
+                return ['name' => $role->name];
+            });
+        }
         return Inertia::render('Products/Index', [
-            'products' => $products
+            'products' => $products,
+            'auth' => [
+                'user' => $userArr,
+            ],
         ]);
     }
 
@@ -42,9 +52,12 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::where('is_active', true)->get();
-
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
         return Inertia::render('Products/Create', [
-            'categories' => $categories
+            'categories' => $categories,
+            'auth' => [
+                'user' => $user,
+            ],
         ]);
     }
 
@@ -52,9 +65,13 @@ class ProductController extends Controller
     {
         $categories = Category::where('is_active', true)->get();
         $products = Product::with('category')->get();
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
         return Inertia::render('Products/Manage', [
             'categories' => $categories,
             'products' => $products,
+            'auth' => [
+                'user' => $user,
+            ],
         ]);
     }
 
@@ -91,9 +108,18 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         $product->load('category');
-
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
+        $userArr = $user ? $user->toArray() : null;
+        if ($user && method_exists($user, 'getRoleNames')) {
+            $userArr['roles'] = $user->roles->map(function ($role) {
+                return ['name' => $role->name];
+            });
+        }
         return Inertia::render('Products/Show', [
-            'product' => $product
+            'product' => $product,
+            'auth' => [
+                'user' => $userArr,
+            ],
         ]);
     }
 
@@ -115,10 +141,19 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::where('is_active', true)->get();
-
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
+        $userArr = $user ? $user->toArray() : null;
+        if ($user && method_exists($user, 'getRoleNames')) {
+            $userArr['roles'] = $user->roles->map(function ($role) {
+                return ['name' => $role->name];
+            });
+        }
         return Inertia::render('Products/Edit', [
             'product' => $product,
-            'categories' => $categories
+            'categories' => $categories,
+            'auth' => [
+                'user' => $userArr,
+            ],
         ]);
     }
 
@@ -195,9 +230,19 @@ class ProductController extends Controller
     {
         $categories = Category::where('is_active', true)->get();
         $products = Product::with('category')->get();
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
+        $userArr = $user ? $user->toArray() : null;
+        if ($user && method_exists($user, 'getRoleNames')) {
+            $userArr['roles'] = $user->roles->map(function ($role) {
+                return ['name' => $role->name];
+            });
+        }
         return Inertia::render('Products/ByCategory', [
             'categories' => $categories,
             'products' => $products,
+            'auth' => [
+                'user' => $userArr,
+            ],
         ]);
     }
 }

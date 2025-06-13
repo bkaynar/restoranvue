@@ -6,6 +6,7 @@ use App\Models\Payment;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
@@ -17,9 +18,18 @@ class PaymentController extends Controller
         $payments = Payment::with(['order.table'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
-
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
+        $userArr = $user ? $user->toArray() : null;
+        if ($user && method_exists($user, 'getRoleNames')) {
+            $userArr['roles'] = $user->roles->map(function ($role) {
+                return ['name' => $role->name];
+            });
+        }
         return Inertia::render('Payments/Index', [
-            'payments' => $payments
+            'payments' => $payments,
+            'auth' => [
+                'user' => $userArr,
+            ],
         ]);
     }
 
@@ -30,10 +40,19 @@ class PaymentController extends Controller
     {
         $order->load(['table', 'items', 'payments']);
         $remainingAmount = $order->remainingAmount();
-
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
+        $userArr = $user ? $user->toArray() : null;
+        if ($user && method_exists($user, 'getRoleNames')) {
+            $userArr['roles'] = $user->roles->map(function ($role) {
+                return ['name' => $role->name];
+            });
+        }
         return Inertia::render('Payments/Create', [
             'order' => $order,
-            'remainingAmount' => $remainingAmount
+            'remainingAmount' => $remainingAmount,
+            'auth' => [
+                'user' => $userArr,
+            ],
         ]);
     }
 
@@ -93,9 +112,18 @@ class PaymentController extends Controller
     public function show(Payment $payment)
     {
         $payment->load('order.table');
-
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
+        $userArr = $user ? $user->toArray() : null;
+        if ($user && method_exists($user, 'getRoleNames')) {
+            $userArr['roles'] = $user->roles->map(function ($role) {
+                return ['name' => $role->name];
+            });
+        }
         return Inertia::render('Payments/Show', [
-            'payment' => $payment
+            'payment' => $payment,
+            'auth' => [
+                'user' => $userArr,
+            ],
         ]);
     }
 
@@ -174,9 +202,19 @@ class PaymentController extends Controller
         // Tüm masaları ve aktif siparişlerini getir
         $tables = \App\Models\Table::with(['activeOrder' => function ($q) {
             $q->whereNotIn('status', ['kapandı', 'ödendi', 'iptal']);
-        }])->get();
-        return Inertia::render('Payments/Create', [
-            'tables' => $tables
+        }, 'activeOrder.items.product'])->get();
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
+        $userArr = $user ? $user->toArray() : null;
+        if ($user && method_exists($user, 'getRoleNames')) {
+            $userArr['roles'] = $user->roles->map(function ($role) {
+                return ['name' => $role->name];
+            });
+        }
+        return Inertia::render('Payments/QuickPayment', [
+            'tables' => $tables,
+            'auth' => [
+                'user' => $userArr,
+            ],
         ]);
     }
 }

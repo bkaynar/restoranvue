@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
 {
@@ -14,9 +15,13 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = Category::withCount('products')->get();
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
 
         return Inertia::render('Categories/Index', [
-            'categories' => $categories
+            'categories' => $categories,
+            'auth' => [
+                'user' => $user,
+            ],
         ]);
     }
 
@@ -37,7 +42,13 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Categories/Create');
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
+
+        return Inertia::render('Categories/Create', [
+            'auth' => [
+                'user' => $user,
+            ],
+        ]);
     }
 
     /**
@@ -62,9 +73,13 @@ class CategoryController extends Controller
     public function show(Category $category)
     {
         $category->load('products');
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
 
         return Inertia::render('Categories/Show', [
-            'category' => $category
+            'category' => $category,
+            'auth' => [
+                'user' => $user,
+            ],
         ]);
     }
 

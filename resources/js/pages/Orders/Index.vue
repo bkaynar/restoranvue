@@ -1,6 +1,6 @@
 <template>
     <AppLayout>
-        <div class="max-w-xl px-2">
+        <div class="max-w m-2 p-2 px-2">
             <div class="flex items-center justify-between mb-6">
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Aktif Siparişler</h1>
                 <Link :href="route('orders.create')"
@@ -18,7 +18,7 @@
                 </svg>
                 <div class="mt-2">Aktif sipariş yok.</div>
             </div>
-            <div v-else class="space-y-4">
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div v-for="order in orders.data.filter(o => !['iptal', 'ödendi', 'kapandı'].includes(o.status))"
                     :key="order.id"
                     class="rounded-lg shadow bg-white dark:bg-gray-900 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border border-gray-100 dark:border-gray-800">
@@ -31,7 +31,7 @@
                         </div>
                         <div>
                             <div class="font-semibold text-lg text-gray-900 dark:text-white">{{ order.table?.name || '-'
-                                }}
+                            }}
                             </div>
                             <div class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
                                 <span

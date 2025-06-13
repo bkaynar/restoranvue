@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
@@ -22,8 +23,12 @@ class UsersController extends Controller
                     'role' => $user->roles->pluck('name')->first() ?? 'garson',
                 ];
             });
+        $user = Auth::id() ? \App\Models\User::find(Auth::id())->load('roles') : null;
         return Inertia::render('Users', [
             'users' => $users,
+            'auth' => [
+                'user' => $user,
+            ],
         ]);
     }
 
