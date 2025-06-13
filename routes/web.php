@@ -10,9 +10,10 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UsersController;
 
+
 Route::get('/', function () {
-    return Inertia::render('Welcome');
-})->name('home');
+    return redirect()->route('dashboard');
+})->name('welcome');
 
 Route::get('dashboard', function () {
     $user = Auth::user()->load('roles');
