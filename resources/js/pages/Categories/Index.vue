@@ -43,7 +43,12 @@ const closeDeleteModal = () => {
 const deleteCategory = () => {
     if (!selectedCategory.value) return;
     loading.value = true;
-    router.delete(route('categories.destroy', selectedCategory.value.id), {
+    const deletedId = selectedCategory.value.id;
+    router.delete(route('categories.destroy', deletedId), {
+        onSuccess: () => {
+            // Kategori silindikten sonra listeden çıkar
+            categories.value = categories.value.filter(cat => cat.id !== deletedId);
+        },
         onFinish: () => {
             loading.value = false;
             closeDeleteModal();

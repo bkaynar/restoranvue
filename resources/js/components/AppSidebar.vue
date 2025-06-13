@@ -7,6 +7,7 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
 import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
+import { usePage } from '@inertiajs/vue3';
 
 const mainNavItems: NavItem[] = [
     {
@@ -49,6 +50,24 @@ const mainNavItems: NavItem[] = [
 const footerNavItems: NavItem[] = [
 
 ];
+
+const page = usePage();
+const user = page.props.auth.user as any;
+
+const isAdmin = user?.roles?.some((r: any) => r.name === 'yönetici');
+const isWaiter = user?.roles?.some((r: any) => r.name === 'garson');
+
+const filteredNavItems = isAdmin
+    ? mainNavItems
+    : isWaiter
+        ? [
+            {
+                title: 'Siparişler',
+                href: '/orders',
+                icon: LayoutGrid,
+            },
+        ]
+        : [];
 </script>
 
 <template>
@@ -66,7 +85,7 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" />
+            <NavMain :items="filteredNavItems" />
         </SidebarContent>
 
         <SidebarFooter>

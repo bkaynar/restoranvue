@@ -47,10 +47,12 @@ const occupancy = props.stats.totalTables > 0 ? Math.round((props.stats.occupied
 
 <template>
 
+
     <Head title="Dashboard" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="max-w-6xl mx-12 py-8">
             <div v-if="userHasRole('yönetici')">
+
 
                 <!-- Hızlı İşlemler -->
                 <div class="rounded-xl bg-white dark:bg-gray-900 p-6 mb-6 border border-gray-200 dark:border-gray-800">
@@ -80,6 +82,13 @@ const occupancy = props.stats.totalTables > 0 ? Math.round((props.stats.occupied
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M12 4v16m8-8H4" />
                             </svg> Ödeme Al
+                        </button>
+                        <button
+                            class="flex-1 px-4 py-3 rounded-lg bg-red-500 text-white font-bold text-lg flex items-center justify-center gap-2 hover:bg-red-600 transition"
+                            @click="router.visit('/tables/create')">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M12 4v16m8-8H4" />
+                            </svg> Yeni Masa
                         </button>
                     </div>
                 </div>
@@ -156,14 +165,27 @@ const occupancy = props.stats.totalTables > 0 ? Math.round((props.stats.occupied
                                         }}</span>
                                     <span class="ml-2 text-xs text-gray-400">{{ new
                                         Date(order.created_at).toLocaleString('tr-TR')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="font-bold text-green-600 dark:text-green-400">₺{{
                                     Number(order.total).toFixed(2)
-                                    }}</div>
+                                }}</div>
                             </li>
                         </ul>
                     </div>
+                </div>
+            </div>
+            <div v-else-if="userHasRole('garson')">
+                <div
+                    class="rounded-xl bg-white dark:bg-gray-900 p-6 mb-6 border border-gray-200 dark:border-gray-800 flex flex-col items-center">
+                    <button
+                        class="px-6 py-3 rounded-lg bg-blue-600 text-white font-bold text-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition"
+                        @click="router.visit('/orders/create')">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 4v16m8-8H4" />
+                        </svg>
+                        Yeni Sipariş
+                    </button>
                 </div>
             </div>
         </div>

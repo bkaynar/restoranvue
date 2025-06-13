@@ -76,3 +76,17 @@ export interface Payment {
   updated_at: string;
   order?: Order;
 }
+
+export interface NavItem {
+  title: string;
+  href: string;
+  icon?: any;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  avatar?: string | null;
+}

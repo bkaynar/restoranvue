@@ -13,7 +13,8 @@ const selectedTable = ref<Table | null>(null);
 const deleteTable = () => {
     if (!selectedTable.value) return;
     loading.value = true;
-    router.delete(route('tables.destroy', selectedTable.value.id), {
+    const id = selectedTable.value.id;
+    router.delete(route('tables.destroy', id), {
         onFinish: () => {
             loading.value = false;
             closeDeleteModal();
