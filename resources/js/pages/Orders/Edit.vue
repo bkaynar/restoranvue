@@ -23,8 +23,10 @@ const props = defineProps<{
 
 const page = usePage();
 const currentUserId = computed(() => page.props.auth?.user?.id);
-const isAdmin = computed(() => page.props.auth?.user?.roles?.some((r: any) => r.name === 'yönetici'));
-const isOwnerOrAdmin = computed(() => currentUserId.value === props.order.user_id || isAdmin.value);
+console.log('Current User ID:', currentUserId.value);
+console.log('Kullanıcı rolleri:', page.props.auth?.user?.roles);
+const isOwnerOrAdmin = computed(() => currentUserId.value === props.order.user_id || page.props.auth?.user?.roles?.some(role => role.name === 'yönetici'));
+
 
 const form = ref({
     table_id: props.order.table_id,

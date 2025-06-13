@@ -338,10 +338,14 @@ class OrderController extends Controller
         $tables = Table::all();
         $categories = \App\Models\Category::with(['products'])->get();
         $order->load(['items']);
+        $user = \Auth::user()->load('roles');
         return Inertia::render('Orders/Edit', [
             'order' => $order,
             'tables' => $tables,
-            'categories' => $categories
+            'categories' => $categories,
+            'auth' => [
+                'user' => $user,
+            ],
         ]);
     }
 }
